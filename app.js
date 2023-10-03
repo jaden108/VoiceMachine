@@ -1,113 +1,93 @@
-/*
-
-outcome
-=======
--speak the text wrote 
-
-
-milestones
-============
- 
-- make the browser speak what i wrote with the selected voice
-
-
-*/
-// - check if speech exists in browser
+// Check if speechSynthesis is supported by the browser
 if (!('speechSynthesis' in window)) {
-  alert("This app doesn't have access to robot voices 🥲");
+    alert("This app doesn't have access to robot voices 🥲");
 } else {
-  // - get access to the text input
-  const textInput = document.getElementById('text-input');
-  // - get access to the speak button
-  const speakButton = document.getElementById('speak-button');
-  // - get access to the voice list
-  const voiceList = document.getElementById('voice-list');
-  // - get access to the voice button
-  const voicesButton = document.getElementById('voices-button');
-  // - get access to the voice machine container
-  const voiceMachineContainer = document.getElementById(
-    'voice-machine-container'
-  );
-  // - get access to the modal
-  const voiceModal = document.getElementById('voice-modal');
-  // - get access to the close button on modal
-  const closeButton = document.getElementById('close-modal');
+    // Get references to HTML elements
+    const textInput = document.getElementById('text-input');
+    const speakButton = document.getElementById('speak-button');
+    const voiceList = document.getElementById('voice-list');
+    const voicesButton = document.getElementById('voices-button');
+    const voiceMachineContainer = document.getElementById('voice-machine-container');
+    const voiceModal = document.getElementById('voice-modal');
+    const closeButton = document.getElementById('close-modal');
 
-  // - hide modal
-  voiceModal.style.display = 'none';
+    // Hide the voice modal by default
+    voiceModal.style.display = 'none';
 
-  // - toggle modal on/off
-  function toggleVoiceModal() {
-    if (
-      voiceModal.style.display === 'none' ||
-      voiceModal.style.display === ''
-    ) {
-      voiceModal.style.display = 'block';
-      voiceMachineContainer.style.display = 'none';
-    } else {
-      voiceModal.style.display = 'none';
-      voiceMachineContainer.style.display = 'block';
+    // Function to toggle the voice modal on/off
+    function toggleVoiceModal() {
+        if (voiceModal.style.display === 'none' || voiceModal.style.display === '') {
+            voiceModal.style.display = 'block';
+            voiceMachineContainer.style.display = 'none';
+        } else {
+            voiceModal.style.display = 'none';
+            voiceMachineContainer.style.display = 'block';
+        }
     }
-  }
 
-  // toggle voice modal on and off
-  voicesButton.addEventListener('click', toggleVoiceModal);
-  // toggle voice modal when I click X
-  closeButton.addEventListener('click', toggleVoiceModal);
+    // Toggle voice modal when the voices button is clicked
+    voicesButton.addEventListener('click', toggleVoiceModal);
+    // Toggle voice modal when the close button on the modal is clicked
+    closeButton.addEventListener('click', toggleVoiceModal);
 
-  // - add voices to the voice list
-  function populateVoiceList() {
-    // - get voices from browser
-    const voices = speechSynthesis.getVoices();
-    // - get all the english voices
-    const enUSVoices = voices.filter((voice) => voice.lang === 'en-US');
-    // - add voices to select
-    enUSVoices.forEach((voice, index) => {
-      // create a new option
-      const option = document.createElement('option');
-      // set the text and language for the option
-      option.textContent = `${voice.name} (${voice.lang})`;
-      // save the voice's name as extra info
-      option.setAttribute('data-name', voice.name);
-      // add the option to voice list
-      voiceList.appendChild(option);
-      // choose zorvox as the default
-      if (voice.name === 'Zarvox') {
-        voiceList.selectedIndex = index;
-      }
-    });
-  }
+    // Function to populate the voice list with available voices
+    function populateVoiceList() {
+        // Get voices from the browser's speechSynthesis API
+        const voices = speechSynthesis.getVoices();
+        // Filter for English voices (en-US)
+        const enUSVoices = voices.filter((voice) => voice.lang === 'en-US');
 
-  // run the populateVoiceList function
-  populateVoiceList();
+        // Remove existing options from the voice list
+        voiceList.innerHTML = '';
 
-  // run function once voices have loaded
-  if (speechSynthesis.onvoiceschanged !== undefined) {
-    speechSynthesis.onvoiceschanged = populateVoiceList;
-  }
+        // Loop through available English voices and add them as options
+        enUSVoices.forEach((voice, index) => {
+            // Create a new option element
+            const option = document.createElement('option');
+            // Set the text and language for the option
+            option.textContent = `${voice.name} (${voice.lang})`;
+            // Save the voice's name as extra info
+            option.setAttribute('data-name', voice.name);
+            // Add the option to the voice list
+            voiceList.appendChild(option);
 
-  // get access to browser voice
-  const utterance = new SpeechSynthesisUtterance();
+            // Choose Zarvox as the default voice (if available)
+            if (voice.name === 'Zarvox') {
+                voiceList.selectedIndex = index;
+            }
+        });
+    }
 
-  // - make the browser speak what I wrote with the selected voice
-  function speakText() {
-    // - get the name of the voice we chose
-    const selectedVoiceName =
-      voiceList.selectedOptions[0].getAttribute('data-name');
-    // - get all the voices inside of the browser
-    const voices = speechSynthesis.getVoices();
-    // - find the voice that matches the one we chose
-    const selectedVoice = voices.find(
-      (voice) => voice.name === selectedVoiceName
-    );
+    // Run the populateVoiceList function initially
+    populateVoiceList();
 
-    // - set the the voice
-    utterance.voice = selectedVoice;
-    utterance.text = textInput.value;
+    // Run the populateVoiceList function when voices have changed
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = populateVoiceList;
+    }
 
-    // - make the computer talk
-    speechSynthesis.speak(utterance);
-  }
+    // Create an instance of SpeechSynthesisUtterance for speech output
+    const utterance = new SpeechSynthesisUtterance();
 
-  speakButton.addEventListener('click', speakText);
+    // Function to make the browser speak the text using the selected voice
+    function speakText() {
+        // Get the name of the selected voice from the option
+        const selectedVoiceName = voiceList.selectedOptions[0].getAttribute('data-name');
+        // Get all available voices
+        const voices = speechSynthesis.getVoices();
+        // Find the voice that matches the selected name
+        const selectedVoice = voices.find((voice) => voice.name === selectedVoiceName);
+
+        // Set the selected voice for the utterance
+        utterance.voice = selectedVoice;
+        // Set the text to be spoken to the value of the text input
+        utterance.text = textInput.value;
+
+        // Make the browser speak the text using the selected voice
+        speechSynthesis.speak(utterance);
+    }
+
+    // Add event listeners for both click and touchend events on the speak button
+    speakButton.addEventListener('click', speakText);
+    speakButton.addEventListener('touchend', speakText);
 }
